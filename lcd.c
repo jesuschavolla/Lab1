@@ -142,6 +142,11 @@ void LCDInitialize(void) {
         LCD_TRIS_RS = 0;
         LCD_TRIS_E = 0;
 
+        LCD_D = 0;
+        LCD_RS = 0;
+        LCD_E = 0;
+
+
         DelayUs(1550);
         
         WriteLCD(0x03,0,4100); // first set of instructions
@@ -158,6 +163,8 @@ void LCDInitialize(void) {
 
          WriteLCD(0x08,0,50); // display on off
 
+         WriteLCD(0x01,0,50);
+
        WriteLCD(0x06,0,50); // entry mode set
 
 
@@ -172,16 +179,16 @@ void LCDInitialize(void) {
 //          LCD_D = 0000;
 //          EnableLCD(0,100);
 //           LCD_D = 1000;
-        WriteLCD(0x08,0,100);
-           DelayUs(50);
+      //  WriteLCD(0x08,0,100);
+          // DelayUs(50);
 
 	// TODO: Clear Display
 //           EnableLCD(0,100);
 //           LCD_D = 0000;
 //           EnableLCD(0,100);
 //           LCD_D = 0001;
-           WriteLCD(0x01,0,100);
-           DelayUs(1650);
+      //     WriteLCD(0x01,0,100);
+          // DelayUs(1650);
 
 
 	// TODO: Entry Mode Set
@@ -190,8 +197,8 @@ void LCDInitialize(void) {
 //           LCD_D = 0000;
 //           EnableLCD(0,100);
 //           LCD_D = 0110;
-           WriteLCD(0x06,0,100);
-           DelayUs(50);
+       //    WriteLCD(0x06,0,100);
+          // DelayUs(50);
 	// TODO: Display On/Off Control
 	// Turn Display (D) On, Cursor (C) Off, and Blink(B) Off
 //           EnableLCD(0,100);
@@ -234,8 +241,8 @@ void LCDMoveCursor(unsigned char x, unsigned char y) {
     if(x == 1){
         DD = 0x0040;
     }
-    DD = (y-1)+ DD +0x0080;
-    WriteLCD(DD,0,50);
+    DD = (y)+ DD +0x0080;
+    WriteLCD(DD,0,1550);
     
 
 
@@ -258,7 +265,7 @@ void LCDPrintChar(char c) {
 
 	// TODO: Write the ASCII character provide as input to the LCD display ensuring
 	// the proper delay is utilized.
-    WriteLCD(c,1,10);
+    WriteLCD(c,1,40);
 }
 
 // ******************************************************************************************* //
@@ -274,7 +281,8 @@ void LCDPrintChar(char c) {
 //          characters if found.
 
 void LCDPrintString(const char* s) {
-    WriteLCD((char)&s,1,40);
+    while(*s)
+        LCDPrintChar(*(s++));
 }
 
 // ******************************************************************************************* //
