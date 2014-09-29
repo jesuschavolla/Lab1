@@ -99,16 +99,18 @@ void WriteLCD(unsigned char word, unsigned commandType, unsigned usDelay) {
 	// bits of the LCD_D signal (i.e. #define used to map internal name to LATB)
 	// and enable the LCD for the correct command.
     if(LCD_WRITE_CONTROL){
-        EnableLCD(commandType,usDelay);
         LCD_D = (word << 8)&& 0xF000;
         EnableLCD(commandType,usDelay);
         LCD_D = (word << 12) && 0xF000;
+        EnableLCD(commandType,usDelay);
+        
     }
     else if(LCD_WRITE_DATA){
-        EnableLCD(commandType,usDelay);
         LCD_D = (word << 8)&& 0xF000;
         EnableLCD(commandType,usDelay);
         LCD_D = (word << 12) && 0xF000;
+        EnableLCD(commandType,usDelay);
+        
     }
 }
 
@@ -140,29 +142,23 @@ void LCDInitialize(void) {
         LCD_TRIS_RS = 0;
         LCD_TRIS_E = 0;
 
-        EnableLCD(0,100); // clear display
-        LCD_D = 0000;
-        EnableLCD(0,100);
-        LCD_D = 0001;
-        DelayUs(1650);
+        DelayUs(1550);
+        
+        WriteLCD(0x03,0,4100); // first set of instructions
 
-        EnableLCD(0,100); //function set
-        LCD_D = 0010;
-        EnableLCD(0,100);
-        LCD_D = 1000;
-        DelayUs(50);
+        WriteLCD(0x03,0,100); // second set of instructions
+ 
+        WriteLCD(0x32,0,40); // thitd set of instructions
+        
 
-        EnableLCD(0,100); // display on off
-        LCD_D = 0000;
-        EnableLCD(0,100);
-        LCD_D = 1000;
-        DelayUs(50);
 
-        EnableLCD(0,100); // entry mode set
-        LCD_D = 0000;
-        EnableLCD(0,100);
-        LCD_D = 0110;
-        DelayUs(50);
+       //WriteLCD(0x01,0,1650);  //clear display
+
+       WriteLCD(0x28,0,50); // function set
+
+         WriteLCD(0x08,0,50); // display on off
+
+       WriteLCD(0x06,0,50); // entry mode set
 
 
 
@@ -262,7 +258,7 @@ void LCDPrintChar(char c) {
 
 	// TODO: Write the ASCII character provide as input to the LCD display ensuring
 	// the proper delay is utilized.
-
+    WriteLCD(c,1,10);
 }
 
 // ******************************************************************************************* //
@@ -278,7 +274,7 @@ void LCDPrintChar(char c) {
 //          characters if found.
 
 void LCDPrintString(const char* s) {
-
+    WriteLCD((char)&s,1,40);
 }
 
 // ******************************************************************************************* //
