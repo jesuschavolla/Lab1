@@ -47,8 +47,7 @@ void DelayUs(unsigned int usDelay) {
     TMR2 = 0;
     while(TMR2 < (1*usDelay));
 
-    TMR2=0;
-    T1CON.TON = 0;
+    
 
 
 
@@ -141,25 +140,29 @@ void LCDInitialize(void) {
         LCD_TRIS_RS = 0;
         LCD_TRIS_E = 0;
 
-        EnableLCD(0,1000); // clear display
+        EnableLCD(0,100); // clear display
         LCD_D = 0000;
-        EnableLCD(0,1000);
+        EnableLCD(0,100);
         LCD_D = 0001;
+        DelayUs(1650);
 
         EnableLCD(0,100); //function set
         LCD_D = 0010;
         EnableLCD(0,100);
-        LCD_D = 0000;
+        LCD_D = 1000;
+        DelayUs(50);
 
         EnableLCD(0,100); // display on off
         LCD_D = 0000;
         EnableLCD(0,100);
         LCD_D = 1000;
+        DelayUs(50);
 
         EnableLCD(0,100); // entry mode set
         LCD_D = 0000;
         EnableLCD(0,100);
         LCD_D = 0110;
+        DelayUs(50);
 
 
 
@@ -169,30 +172,38 @@ void LCDInitialize(void) {
 
 	// TODO: Display On/Off Control
 	// Turn Display (D) Off
-         EnableLCD(0,100);
-          LCD_D = 0000;
-          EnableLCD(0,100);
-           LCD_D = 1000;
+//         EnableLCD(0,100);
+//          LCD_D = 0000;
+//          EnableLCD(0,100);
+//           LCD_D = 1000;
+        WriteLCD(0x08,0,100);
+           DelayUs(50);
 
 	// TODO: Clear Display
-           EnableLCD(0,1000);
-           LCD_D = 0000;
-           EnableLCD(0,1000);
-           LCD_D = 0001;
+//           EnableLCD(0,100);
+//           LCD_D = 0000;
+//           EnableLCD(0,100);
+//           LCD_D = 0001;
+           WriteLCD(0x01,0,100);
+           DelayUs(1650);
 
 
 	// TODO: Entry Mode Set
 	// Set Increment Display, No Shift (i.e. cursor move)
-           EnableLCD(0,100);
-           LCD_D = 0000;
-           EnableLCD(0,100);
-           LCD_D = 0110;
+//           EnableLCD(0,100);
+//           LCD_D = 0000;
+//           EnableLCD(0,100);
+//           LCD_D = 0110;
+           WriteLCD(0x06,0,100);
+           DelayUs(50);
 	// TODO: Display On/Off Control
 	// Turn Display (D) On, Cursor (C) Off, and Blink(B) Off
-           EnableLCD(0,100);
-           LCD_D = 0000;
-           EnableLCD(0,100);
-           LCD_D = 1100;
+//           EnableLCD(0,100);
+//           LCD_D = 0000;
+//           EnableLCD(0,100);
+//           LCD_D = 1100;
+           WriteLCD(0x0C,0,100);
+           DelayUs(50);
 }
 
 // ******************************************************************************************* //
@@ -204,10 +215,12 @@ void LCDClear(void) {
 
 	// TODO: Write the proper control instruction to clear the screen ensuring
 	// the proper delay is utilized.
-    EnableLCD(0,1000);
-    LCD_D = 0000;
-    EnableLCD(0,1000);
-    LCD_D = 0001;
+//    EnableLCD(0,100);
+//    LCD_D = 0000;
+//    EnableLCD(0,100);
+//    LCD_D = 0001;
+    WriteLCD(0x01,0,100);
+    DelayUs(1650);
 }
 
 // ******************************************************************************************* //
@@ -221,11 +234,19 @@ void LCDClear(void) {
 //    unsigned char y : coordinate for LCD column (0 to 7)
 
 void LCDMoveCursor(unsigned char x, unsigned char y) {
+    unsigned char DD = 0x0000;
+    if(x == 1){
+        DD = 0x0040;
+    }
+    DD = (y-1)+ DD +0x0080;
+    WriteLCD(DD,0,50);
+    
+
 
 	// TODO: Write the propoer control instruction to move the cursor to the specified
 	// (x,y) coordinate. This operation should be performance as a single control
 	// control instruction, i.e. a single call the WriteLCD() function.
-    WriteLCD(,0,)
+    
 
 }
 
