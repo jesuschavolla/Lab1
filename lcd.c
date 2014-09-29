@@ -43,9 +43,9 @@ void DelayUs(unsigned int usDelay) {
 	// one microsecond delay, and multiply this by the input variable.
 	// Be sure to user integer values only.
 /**********************************************/
-    T2CON.TON = 1;
+    T2CON = 0x8010;
     TMR2 = 0;
-    while(TMR2 < (14*usDelay));
+    while(TMR2 < (1*usDelay));
 
     TMR2=0;
     T1CON.TON = 0;
@@ -101,7 +101,15 @@ void WriteLCD(unsigned char word, unsigned commandType, unsigned usDelay) {
 	// and enable the LCD for the correct command.
     if(LCD_WRITE_CONTROL){
         EnableLCD(commandType,usDelay);
-        
+        LCD_D = (word << 8)&& 0xF000;
+        EnableLCD(commandType,usDelay);
+        LCD_D = (word << 12) && 0xF000;
+    }
+    else if(LCD_WRITE_DATA){
+        EnableLCD(commandType,usDelay);
+        LCD_D = (word << 8)&& 0xF000;
+        EnableLCD(commandType,usDelay);
+        LCD_D = (word << 12) && 0xF000;
     }
 }
 
@@ -114,7 +122,7 @@ void WriteLCD(unsigned char word, unsigned commandType, unsigned usDelay) {
 void LCDInitialize(void) {
 
 	// Setup D, RS, and E to be outputs (0).
-
+           // TODO
 	// Initilization sequence utilizes specific LCD commands before the general configuration
 	// commands can be utilized. The first few initilition commands cannot be done using the
 	// WriteLCD function. Additionally, the specific sequence and timing is very important.
@@ -126,13 +134,65 @@ void LCDInitialize(void) {
 	// 4-bit mode initialization is complete. We can now configure the various LCD
 	// options to control how the LCD will function.
 
+        LCD_TRIS_D7 = 0;
+        LCD_TRIS_D6 = 0;
+        LCD_TRIS_D5 = 0;
+        LCD_TRIS_D4 = 0;
+        LCD_TRIS_RS = 0;
+        LCD_TRIS_E = 0;
+
+        EnableLCD(0,1000); // clear display
+        LCD_D = 0000;
+        EnableLCD(0,1000);
+        LCD_D = 0001;
+
+        EnableLCD(0,100); //function set
+        LCD_D = 0010;
+        EnableLCD(0,100);
+        LCD_D = 0000;
+
+        EnableLCD(0,100); // display on off
+        LCD_D = 0000;
+        EnableLCD(0,100);
+        LCD_D = 1000;
+
+        EnableLCD(0,100); // entry mode set
+        LCD_D = 0000;
+        EnableLCD(0,100);
+        LCD_D = 0110;
+
+
+
+
+
+        //
+
 	// TODO: Display On/Off Control
 	// Turn Display (D) Off
+         EnableLCD(0,100);
+          LCD_D = 0000;
+          EnableLCD(0,100);
+           LCD_D = 1000;
+
 	// TODO: Clear Display
+           EnableLCD(0,1000);
+           LCD_D = 0000;
+           EnableLCD(0,1000);
+           LCD_D = 0001;
+
+
 	// TODO: Entry Mode Set
 	// Set Increment Display, No Shift (i.e. cursor move)
+           EnableLCD(0,100);
+           LCD_D = 0000;
+           EnableLCD(0,100);
+           LCD_D = 0110;
 	// TODO: Display On/Off Control
 	// Turn Display (D) On, Cursor (C) Off, and Blink(B) Off
+           EnableLCD(0,100);
+           LCD_D = 0000;
+           EnableLCD(0,100);
+           LCD_D = 1100;
 }
 
 // ******************************************************************************************* //
@@ -144,6 +204,10 @@ void LCDClear(void) {
 
 	// TODO: Write the proper control instruction to clear the screen ensuring
 	// the proper delay is utilized.
+    EnableLCD(0,1000);
+    LCD_D = 0000;
+    EnableLCD(0,1000);
+    LCD_D = 0001;
 }
 
 // ******************************************************************************************* //
@@ -161,6 +225,7 @@ void LCDMoveCursor(unsigned char x, unsigned char y) {
 	// TODO: Write the propoer control instruction to move the cursor to the specified
 	// (x,y) coordinate. This operation should be performance as a single control
 	// control instruction, i.e. a single call the WriteLCD() function.
+    WriteLCD(,0,)
 
 }
 
