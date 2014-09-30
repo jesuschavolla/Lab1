@@ -99,30 +99,21 @@ void WriteLCD(unsigned char word, unsigned commandType, unsigned usDelay) {
 	// TODO: Using bit masking and shift operations, write least significant bits to correct
 	// bits of the LCD_D signal (i.e. #define used to map internal name to LATB)
 	// and enable the LCD for the correct command.
-//    if(LCD_WRITE_CONTROL){
-//        LCD_D = (word << 8)&& 0xF000;
-//        EnableLCD(commandType,usDelay);
-//        LCD_D = (word << 12) && 0xF000;
-//        EnableLCD(commandType,usDelay);
-//
-//    }
-//    else if(LCD_WRITE_DATA){
-//        LCD_D = (word << 8)&& 0xF000;
-//        EnableLCD(commandType,usDelay);
-//        LCD_D = (word << 12) && 0xF000;
-//        EnableLCD(commandType,usDelay);
-//
-//    }
-     // Most Significant Bits
-    // Need to do bit masking for upper nibble, and shift left by 8.
+    if(LCD_WRITE_CONTROL){
+        LCD_D = (word << 8)& 0xF000;
+        EnableLCD(commandType,usDelay);
+        LCD_D = (word << 12) & 0xF000;
+        EnableLCD(commandType,usDelay);
 
-    LCD_D = (0x0FFF) | (word << 8);
-    EnableLCD(commandType, usDelay); // Send Data
+    }
+    else if(LCD_WRITE_DATA){
+        LCD_D = (word << 8)& 0xF000;
+        EnableLCD(commandType,usDelay);
+        LCD_D = (word << 12) & 0xF000;
+        EnableLCD(commandType,usDelay);
 
-    // Least Significant Bits
-    // Need to do bit masking for lower nibble, and shift left by 12.
-    LCD_D = (0x0FFF) | (word << 12);
-    EnableLCD(commandType, usDelay); // Send Data
+    }
+    
 }
 
 // ******************************************************************************************* //

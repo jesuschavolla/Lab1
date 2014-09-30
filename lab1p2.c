@@ -46,7 +46,14 @@ _CONFIG2( IESO_OFF & SOSCSEL_SOSC & WUTSEL_LEG & FNOSC_PRIPLL & FCKSM_CSDCMD & O
 //           service routine but will be read in the main execution loop.
 //        2. Declared as unsigned char as the varaible will only store the values between
 //           0 and 10.
+
 volatile unsigned char cnt;
+volatile unsigned char tens;
+volatile unsigned char mins;
+volatile unsigned char tenmins;
+
+//volatile unsigned char tenths;
+volatile unsigned int hundredths;
 unsigned char command;
 // ******************************************************************************************* //
 
@@ -97,24 +104,37 @@ int main(void)
 //	LCDPrintChar('.');
 //	LCDPrintChar('0');
 //	LCDPrintChar('0');
-
+       
 	while(1)
 	{
-//			  LCDMoveCursor(1,0);
-//            LCDPrintChar(cnt+'0');
-//            LCDMoveCursor(1,1);
-//            LCDPrintChar(cnt+'0');
-//            LCDMoveCursor(1,3);
-//            LCDPrintChar(cnt+'0');
-//            //given
-			  LCDMoveCursor(1,4);
-			  LCDPrintChar(cnt+'0');
-//            //given above
-//            LCDMoveCursor(1,6);
-//            LCDPrintChar(cnt+'0');
-//            LCDMoveCursor(1,7);
-//            LCDPrintChar(cnt+'0');
-//
+            LCDMoveCursor(1,0);
+            LCDPrintChar(tenmins+'0');
+            LCDMoveCursor(1,1);
+            LCDPrintChar(mins+'0');
+
+            LCDMoveCursor(1,3);
+            LCDPrintChar(tens+'0');
+            //given
+	 LCDMoveCursor(1,4);
+         LCDPrintChar(cnt+'0');
+
+
+
+//            given above
+
+            LCDMoveCursor(1,6);
+            LCDPrintChar((int)(TMR1/5759)+'0');
+            
+
+            if((TMR1/575.99)<10)
+                hundredths=(int)(TMR1/575.99);
+            
+            if((TMR1/575.99)>=10)
+            hundredths=((int)(TMR1/575.99))-(((int)(TMR1/5759.9))*10);
+
+            LCDMoveCursor(1,7);
+             LCDPrintChar(hundredths+'0');
+
 	}
 	return 0;
 }
@@ -139,7 +159,21 @@ void __attribute__((interrupt,auto_psv)) _T1Interrupt(void)
 	IFS0bits.T1IF = 0;
 
 	// Updates cnt to wraparound from 9 to 0 for this demo.
-	cnt = (cnt<9)?(cnt+1):0;
+        if(mins==9&&tens==5&&cnt==9)
+        {
+            tenmins=(tenmins<9)?(tenmins+1):0;
+        }
+        if(tens==5&&cnt==9)
+        {
+            mins=(mins<9)?(mins+1):0;
+        }
+        if(cnt==9)
+        { tens=(tens<5)?(tens+1):0;
+        }
+
+        cnt = (cnt<9)?(cnt+1):0;
+
+
 
 /*******************************/
 	//make the LCD blink;
