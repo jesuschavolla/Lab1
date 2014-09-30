@@ -278,7 +278,7 @@ void LCDPrintChar(char c) {
 //          characters if found.
 
 void LCDPrintString(const char* s) {
-
+    s(0) = "\0";
 }
 
 // ******************************************************************************************* //
