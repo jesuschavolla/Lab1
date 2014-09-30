@@ -115,6 +115,7 @@ void WriteLCD(unsigned char word, unsigned commandType, unsigned usDelay) {
 //    }
      // Most Significant Bits
     // Need to do bit masking for upper nibble, and shift left by 8.
+
     LCD_D = (0x0FFF) | (word << 8);
     EnableLCD(commandType, usDelay); // Send Data
 
