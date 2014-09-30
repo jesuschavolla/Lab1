@@ -46,6 +46,7 @@ void DelayUs(unsigned int usDelay) {
     T2CON = 0x8010;
     TMR2 = 0;
     while(TMR2 < (1*usDelay));
+    T2CONbits.TON = 0;
 
     
 
@@ -99,16 +100,18 @@ void WriteLCD(unsigned char word, unsigned commandType, unsigned usDelay) {
 	// bits of the LCD_D signal (i.e. #define used to map internal name to LATB)
 	// and enable the LCD for the correct command.
     if(LCD_WRITE_CONTROL){
-        EnableLCD(commandType,usDelay);
         LCD_D = (word << 8)&& 0xF000;
         EnableLCD(commandType,usDelay);
         LCD_D = (word << 12) && 0xF000;
+        EnableLCD(commandType,usDelay);
+        
     }
     else if(LCD_WRITE_DATA){
-        EnableLCD(commandType,usDelay);
         LCD_D = (word << 8)&& 0xF000;
         EnableLCD(commandType,usDelay);
         LCD_D = (word << 12) && 0xF000;
+        EnableLCD(commandType,usDelay);
+        
     }
 }
 
@@ -140,29 +143,30 @@ void LCDInitialize(void) {
         LCD_TRIS_RS = 0;
         LCD_TRIS_E = 0;
 
-        EnableLCD(0,100); // clear display
-        LCD_D = 0000;
-        EnableLCD(0,100);
-        LCD_D = 0001;
-        DelayUs(1650);
+        LCD_D = 0;
+        LCD_RS = 0;
+        LCD_E = 0;
 
-        EnableLCD(0,100); //function set
-        LCD_D = 0010;
-        EnableLCD(0,100);
-        LCD_D = 1000;
-        DelayUs(50);
 
-        EnableLCD(0,100); // display on off
-        LCD_D = 0000;
-        EnableLCD(0,100);
-        LCD_D = 1000;
-        DelayUs(50);
+        DelayUs(1550);
+        
+        WriteLCD(0x3,0,4100); // first set of instructions
 
-        EnableLCD(0,100); // entry mode set
-        LCD_D = 0000;
-        EnableLCD(0,100);
-        LCD_D = 0110;
-        DelayUs(50);
+        WriteLCD(0x3,0,100); // second set of instructions
+ 
+        WriteLCD(0x32,0,40); // thitd set of instructions
+        
+
+
+      
+
+       WriteLCD(0x28,0,50); // function set
+
+         WriteLCD(0x8,0,50); // display on off
+
+         WriteLCD(0x1,0,50);
+
+       WriteLCD(0x6,0,50); // entry mode set
 
 
 
@@ -176,16 +180,16 @@ void LCDInitialize(void) {
 //          LCD_D = 0000;
 //          EnableLCD(0,100);
 //           LCD_D = 1000;
-        WriteLCD(0x08,0,100);
-           DelayUs(50);
+      //  WriteLCD(0x08,0,100);
+          // DelayUs(50);
 
 	// TODO: Clear Display
 //           EnableLCD(0,100);
 //           LCD_D = 0000;
 //           EnableLCD(0,100);
 //           LCD_D = 0001;
-           WriteLCD(0x01,0,100);
-           DelayUs(1650);
+      //     WriteLCD(0x01,0,100);
+          // DelayUs(1650);
 
 
 	// TODO: Entry Mode Set
@@ -194,15 +198,15 @@ void LCDInitialize(void) {
 //           LCD_D = 0000;
 //           EnableLCD(0,100);
 //           LCD_D = 0110;
-           WriteLCD(0x06,0,100);
-           DelayUs(50);
+       //    WriteLCD(0x06,0,100);
+          // DelayUs(50);
 	// TODO: Display On/Off Control
 	// Turn Display (D) On, Cursor (C) Off, and Blink(B) Off
 //           EnableLCD(0,100);
 //           LCD_D = 0000;
 //           EnableLCD(0,100);
 //           LCD_D = 1100;
-           WriteLCD(0x0C,0,100);
+           WriteLCD(0xC,0,100);
            DelayUs(50);
 }
 
@@ -219,7 +223,7 @@ void LCDClear(void) {
 //    LCD_D = 0000;
 //    EnableLCD(0,100);
 //    LCD_D = 0001;
-    WriteLCD(0x01,0,100);
+    WriteLCD(0x1,0,100);
     DelayUs(1650);
 }
 
@@ -238,8 +242,8 @@ void LCDMoveCursor(unsigned char x, unsigned char y) {
     if(x == 1){
         DD = 0x0040;
     }
-    DD = (y-1)+ DD +0x0080;
-    WriteLCD(DD,0,50);
+    DD = (y)+ DD +0x0080;
+    WriteLCD(DD,0,1550);
     
 
 
@@ -262,7 +266,7 @@ void LCDPrintChar(char c) {
 
 	// TODO: Write the ASCII character provide as input to the LCD display ensuring
 	// the proper delay is utilized.
-
+    WriteLCD(c,1,40);
 }
 
 // ******************************************************************************************* //
@@ -278,7 +282,12 @@ void LCDPrintChar(char c) {
 //          characters if found.
 
 void LCDPrintString(const char* s) {
-    s(0) = "\0";
+//<<<<<<< HEAD
+    
+//=======
+    while(*s)
+        LCDPrintChar(*(s++));
+//>>>>>>> 2e196f4255a38d3a7d6b57ea6cfc4c0a1f7f13ff
 }
 
 // ******************************************************************************************* //
