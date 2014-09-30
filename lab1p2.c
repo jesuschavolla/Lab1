@@ -79,11 +79,11 @@ int main(void)
 	LCDInitialize();
 /*******************************/
 ////	//below is for testing MoceCursor command
-////	LCDMoveCursor(0,2);
-////	LCDPrintString("Hello");
-////	LCDMoveCursor(1,2);
-////	LCDPrintString("Test");
-////	command = 0xC;
+//	LCDMoveCursor(0,2);
+//	LCDPrintString("Hello");
+//	LCDMoveCursor(1,2);
+//	LCDPrintString("Test");
+//	command = 0xC;
 /*******************************/
 
 	LCDPrintString("Running:");
