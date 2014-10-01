@@ -52,13 +52,95 @@ volatile unsigned char tens;
 volatile unsigned char mins;
 volatile unsigned char tenmins;
 
-//volatile unsigned char tenths;
+volatile unsigned char tenths;
 volatile unsigned int hundredths;
 unsigned char command;
 // ******************************************************************************************* //
 
+
+
+void DebounceDelay() {
+    TMR3 = 0;
+    T3CONbits.TON = 1;//     (sets timer off)
+	    T3CONbits.TCKPS1=1;//    (sets timer prescaler to 1:256)
+            T3CONbits.TCKPS0=1;//   (set timer prescaler to 1:256)
+	    T3CONbits.TCS= 0;//     (Fosc/2)
+            PR3 = 576;
+
+
+	// TODO: Use Timer 1 to create a precise 5 ms delay.
+	//int i;
+	//for(i=0; i<PR3; i++);
+    while(TMR3 < PR3);
+}
+
+// ******************************************************************************************* //
+
 int main(void)
 {
+//    // TODO: Configure AD1PCFG register for configuring input pins between analog input
+	// and digital IO.
+    AD1PCFGbits.PCFG0=0;//sets RA0 to analog (RIGHT LED)
+    AD1PCFGbits.PCFG1=0;//sets RA1 to analog ( LEFT LED)
+    AD1PCFGbits.PCFG4=1;//sets RB2 to digital (SWITCH)
+
+	// TODO: Configure TRIS register bits for Right and Left LED outputs.
+    TRISAbits.TRISA0=0;//sets RIGHT LED as output
+    TRISAbits.TRISA1=0;//sets LEFT LED as output
+    TRISBbits.TRISB5=1; //sets sw1 as input
+
+	// TODO: Configure LAT register bits to initialize Right LED to on.
+    LATA=0;
+    LATAbits.LATA0=0;//Green LED on (RIGHT LED)
+    LATAbits.LATA1=1;//RED LED off
+
+	// TODO: Configure ODC register bits to use open drain configuration for Right
+	// and Left LED output.
+    ODCAbits.ODA0=1;//enables open drain configuration for Green LED
+    ODCAbits.ODA1=1;// enables open drain configuration for RED LED
+
+	// TODO: Configure TRIS register bits for swtich input.
+    TRISBbits.TRISB2=1;//input switch
+
+	// TODO: Configure CNPU register bits to enable internal pullup resistor for switch
+	// input.
+    CNPU1bits.CN2PUE=1;
+    CNPU1bits.CN3PUE=1;
+    CNPU1bits.CN6PUE=1;
+
+	// TODO: Setup Timer 1 to use internal clock (Fosc/2).
+
+        //    Fosc     = XTFREQ * PLLMODE
+	//             = 7372800 * 4
+	//             = 29491200
+	//
+	//    Fosc/2   = 29491200 / 2
+	//             = 14745600
+
+	// TODO: Setup Timer 1's prescaler to 1:256.
+
+        //    Timer 1 Freq = (Fosc/2) / Prescaler
+	//                 = 14745600 / 256
+	//                 = 57600
+	//
+
+ 	// TODO: Set Timer 1 to be initially off.
+            
+
+	// TODO: Clear Timer 1 value and reset interrupt flag
+            TMR3=0;//Clears timer1
+            IFS0bits.T1IF = 0;//clear interrupt flag timer1
+
+
+	// TODO: Set Timer 1's period value register to value for 5 ms.
+            //    PR1 = 5 ms / (1 / (T1 Freq))
+            //        = 5e-3 / (1 / 57600)
+            //        = 5e-3 * 57600
+            //        = 288
+            PR3 = 288;//timer 1's period for 5ms
+
+
+//
 
 	// The following provides a demo configuration of Timer 1 in which
 	// the Timer 1 interrupt service routine will be executed every 1 second
@@ -92,7 +174,7 @@ int main(void)
 //	LCDPrintString("Test");
 //	command = 0xC;
 /*******************************/
-
+  
 	LCDPrintString("Running:");
 	LCDMoveCursor(1,0);
 	LCDPrintString("00:00.00");
@@ -104,9 +186,77 @@ int main(void)
 //	LCDPrintChar('.');
 //	LCDPrintChar('0');
 //	LCDPrintChar('0');
-       
+        int state=0;
+        int click = 0;
+
 	while(1)
 	{
+//             
+                        
+                        if(PORTBbits.RB2 == 0&&state==0)
+                        {
+                            LCDMoveCursor(0,0);
+                                 LCDPrintString("Running:");
+                            click++;
+                             LATAbits.LATA0=~(LATAbits.LATA0);//turn off GREEn 
+                             LATAbits.LATA1=~(LATAbits.LATA1);//TURN on red
+                             DebounceDelay();//5ms delay
+                             state=1;
+                             T1CONbits.TON = 1;
+
+                             if(click%2 == 1){
+                                 LCDMoveCursor(0,0);
+                                 LCDPrintString("Stopped:");
+                                 T1CONbits.TON = 0;
+                             }
+
+
+                        }
+                        if(PORTBbits.RB2== 1 && state==1)
+                        {   state=0;
+                            DebounceDelay();
+                        }
+
+                        if(PORTBbits.RB5==0 && T1CONbits.TON==0){
+                            TMR1=0;
+                            cnt=0;
+                            mins=0;
+                            tens=0;
+                            tenmins = 0;
+                            hundredths=0;
+                            tenths=0;
+
+                        }
+//                        state = 1;
+//                    break;
+//                    case 1:
+//                        DebounceDelay();//5ms delay
+//                        while(PORTBbits.RB2 == 1);
+//
+//                            state = 2;
+//                    break;
+//                    case 2:
+//                       DebounceDelay();//5ms delay
+//                        while(PORTBbits.RB2 == 0)
+//                        {
+//                            LATAbits.LATA0=0;//turn off GREEn
+//                            LATAbits.LATA1=1;//TURN on red
+//                        }
+//
+//
+//                        state=3;
+//                    break;
+//                    case 3:
+//                         DebounceDelay();//5ms delay
+//                        while(PORTBbits.RB2 == 1);
+//
+//                        state = 0;
+//                    break;
+////
+//                }
+//            while(PORTAbits.RA0==0)//while Green lED is on
+//            {
+           
             LCDMoveCursor(1,0);
             LCDPrintChar(tenmins+'0');
             LCDMoveCursor(1,1);
@@ -115,15 +265,14 @@ int main(void)
             LCDMoveCursor(1,3);
             LCDPrintChar(tens+'0');
             //given
-	 LCDMoveCursor(1,4);
-         LCDPrintChar(cnt+'0');
-
-
-
+            LCDMoveCursor(1,4);
+            LCDPrintChar(cnt+'0');
 //            given above
 
             LCDMoveCursor(1,6);
-            LCDPrintChar((int)(TMR1/5759)+'0');
+            tenths = TMR1/5759.9;
+            LCDPrintChar((int)(tenths)+'0');
+            
             
 
             if((TMR1/575.99)<10)
@@ -134,8 +283,39 @@ int main(void)
 
             LCDMoveCursor(1,7);
              LCDPrintChar(hundredths+'0');
+            
 
-	}
+//            while(PORTAbits.RA1==0)//while RED LED is on
+//            {
+//            IFS0bits.T1IF = 0;
+//            LCDPrintString("STOPPED:");
+//            LCDMoveCursor(1,0);
+//            LCDPrintChar(tenmins+'0');
+//            LCDMoveCursor(1,1);
+//            LCDPrintChar(mins+'0');
+//
+//            LCDMoveCursor(1,3);
+//            LCDPrintChar(tens+'0');
+//            //given
+//            LCDMoveCursor(1,4);
+//            LCDPrintChar(cnt+'0');
+////            given above
+//
+//            LCDMoveCursor(1,6);
+//            LCDPrintChar((int)(TMR1/5759)+'0');
+//
+//
+//            if((TMR1/575.99)<10)
+//                hundredths=(int)(TMR1/575.99);
+//
+//            if((TMR1/575.99)>=10)
+//            hundredths=((int)(TMR1/575.99))-(((int)(TMR1/5759.9))*10);
+//
+//            LCDMoveCursor(1,7);
+//             LCDPrintChar(hundredths+'0');
+//
+//            }
+        }
 	return 0;
 }
 
@@ -172,7 +352,6 @@ void __attribute__((interrupt,auto_psv)) _T1Interrupt(void)
         }
 
         cnt = (cnt<9)?(cnt+1):0;
-
 
 
 /*******************************/

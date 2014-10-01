@@ -28,6 +28,16 @@ _CONFIG1( JTAGEN_OFF & GCP_OFF & GWRP_OFF &
 
 _CONFIG2( IESO_OFF & SOSCSEL_SOSC & WUTSEL_LEG & FNOSC_PRIPLL & FCKSM_CSDCMD & OSCIOFNC_OFF &
           IOL1WAY_OFF & I2C1SEL_PRI & POSCMOD_XT )
+// ******************************************************************************************* //
+
+void DebounceDelay() {
+
+	// TODO: Use Timer 1 to create a precise 5 ms delay.
+	int i;
+	for(i=0; i<PR3; i++);
+}
+
+// ******************************************************************************************* //
 
 int main(void)
 {
@@ -79,37 +89,33 @@ int main(void)
 	//
 
  	// TODO: Set Timer 1 to be initially off.
-            T1CONbits.TON = 0;//     (sets timer off)
-	    T1CONbits.TCKPS1=1;//    (sets timer prescaler to 1:256)
-            T1CONbits.TCKPS0=1;//   (set timer prescaler to 1:256)
-	    T1CONbits.TCS= 0;//     (Fosc/2)
+            T3CONbits.TON = 0;//     (sets timer off)
+	    T3CONbits.TCKPS1=1;//    (sets timer prescaler to 1:256)
+            T3CONbits.TCKPS0=1;//   (set timer prescaler to 1:256)
+	    T3CONbits.TCS= 0;//     (Fosc/2)
 
 	// TODO: Clear Timer 1 value and reset interrupt flag
-            TMR1=0;//Clears timer1
+            TMR3=0;//Clears timer1
             IFS0bits.T1IF = 0;//clear interrupt flag timer1
-            IEC0bits.T1IE = 1;//enables interrupt flag
+            
             
 	// TODO: Set Timer 1's period value register to value for 5 ms.
             //    PR1 = 5 ms / (1 / (T1 Freq))
             //        = 5e-3 / (1 / 57600)
             //        = 5e-3 * 57600
             //        = 288
-            PR1 = 288;//timer 1's period for 5ms
-           int loop=0;//variable used to check in debouncing of LEDs
+            PR3 = 288;//timer 1's period for 5ms
+           
            int state=0;
 
             while(1)
             {
-		// TODO: For each distinct button press, alternate which
-		// LED is illuminated (on).
-		// TODO: Use DebounceDelay() function to debounce button press
-		// and button release in software.
-                //IFS1bits.CNIF = 0;
+
                
                 switch(state)
                 {
                     case 0:
-                        for(loop=0;loop<PR1;loop++);//5ms delay
+                        DebounceDelay();//5ms delay
                         while(PORTBbits.RB2 == 0)
                         {
                              LATAbits.LATA0=1;//turn off GREEn
@@ -120,13 +126,13 @@ int main(void)
                         state = 1;
                     break;
                     case 1:
-                        for(loop=0;loop<PR1;loop++);//5ms delay
+                        DebounceDelay();//5ms delay
                         while(PORTBbits.RB2 == 1);
                         
                             state = 2;
                     break;
                     case 2:
-                        for(loop=0;loop<PR1;loop++);//5ms delay
+                       DebounceDelay();//5ms delay
                         while(PORTBbits.RB2 == 0)
                         {
                             LATAbits.LATA0=0;//turn off GREEn
@@ -137,7 +143,7 @@ int main(void)
                         state=3;
                     break;
                     case 3:
-                         for(loop=0;loop<PR1;loop++);//5ms delay
+                         DebounceDelay();//5ms delay
                         while(PORTBbits.RB2 == 1);
                        
                         state = 0;
