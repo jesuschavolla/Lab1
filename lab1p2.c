@@ -3,6 +3,8 @@
 // MACROS for special function registers (SFR) and control bits within those
 // registers.
 
+// NAMES: JOSH HURLEY, URIEL GARCIA AND JESUS CHAVOLLA
+
 #include "p24fj64ga002.h"
 #include <stdio.h>
 #include "lcd.h"
@@ -130,15 +132,15 @@ int main(void)
               T3CONbits.TCKPS1=1;//    (sets timer prescaler to 1:256)
               T3CONbits.TCKPS0=1;//   (set timer prescaler to 1:256)
               T3CONbits.TCS= 0;//     (Fosc/2)
-              PR3 = 576;
+              PR3 = 288;//5ms delay
 
 
 //
 
 	// The following provides a demo configuration of Timer 1 in which
 	// the Timer 1 interrupt service routine will be executed every 1 second
-	PR1 = 57599;
-	TMR1 = 0;
+	PR1 = 57599;//1 second delay
+	TMR1 = 0;//resets timer 1
 	IFS0bits.T1IF = 0;
 	IEC0bits.T1IE = 1;
 	T1CONbits.TCKPS = 3;
@@ -171,49 +173,25 @@ int main(void)
 	LCDPrintString("Running:");
 	LCDMoveCursor(1,0);
 	LCDPrintString("00:00.00");
-//	LCDPrintChar('0');
-//	LCDPrintChar('0');
-//	LCDPrintChar(':');
-//	LCDPrintChar('0');
-//	LCDPrintChar('0');
-//	LCDPrintChar('.');
-//	LCDPrintChar('0');
-//	LCDPrintChar('0');
+
         state=0;
         click = 0;
 
 	while(1)
 	{
-//
-//                        state = 1;
-//                    break;
-//                    case 1:
-//                        DebounceDelay();//5ms delay
-//                        while(PORTBbits.RB2 == 1);
-//
-//                            state = 2;
-//                    break;
-//                    case 2:
-//                       DebounceDelay();//5ms delay
-//                        while(PORTBbits.RB2 == 0)
-//                        {
-//                            LATAbits.LATA0=0;//turn off GREEn
-//                            LATAbits.LATA1=1;//TURN on red
-//                        }
-//
-//
-//                        state=3;
-//                    break;
-//                    case 3:
-//                         DebounceDelay();//5ms delay
-//                        while(PORTBbits.RB2 == 1);
-//
-//                        state = 0;
-//                    break;
-////
-//                }
-//            while(PORTAbits.RA0==0)//while Green lED is on
-//            {
+             if(state==0)
+              {
+                            LCDMoveCursor(0,0);
+                                 LCDPrintString("Running:");
+
+                              if(click%2 == 1){
+                                 LCDMoveCursor(0,0);
+                                 LCDPrintString("Stopped:");
+                             }
+
+
+                        }
+
 
             LCDMoveCursor(1,0);
             LCDPrintChar(tenmins+'0');
@@ -267,43 +245,36 @@ int main(void)
 void __attribute__((interrupt, auto_psv)) _CNInterrupt(void) {
 
                         if(PORTBbits.RB2 == 0&&state==0)
-                        {
+                        {//if the button is pressed start running time
                             LCDMoveCursor(0,0);
                                  LCDPrintString("Running:");
                             click++;
-                             LATAbits.LATA0=~(LATAbits.LATA0);//turn off GREEn
-                             LATAbits.LATA1=~(LATAbits.LATA1);//TURN on red
-                              TMR3 = 0;
-                              while(TMR3 < PR3);
+                             LATAbits.LATA0=~(LATAbits.LATA0);//alternates behavior of GREEN LED
+                             LATAbits.LATA1=~(LATAbits.LATA1);//alternates behavior of RED LED
+                              TMR3 = 0;//resets timer 3
+                              while(TMR3 < PR3);//5ms delay between button pressed
 
                              state=1;
-                             T1CONbits.TON = 1;
-
-                             if(click%2 == 1){
+                             T1CONbits.TON = 1;//turns timer 1 on
+                              if(click%2 == 1){//if the button is pressed twice
                                  LCDMoveCursor(0,0);
                                  LCDPrintString("Stopped:");
-                                 T1CONbits.TON = 0;
+                                 T1CONbits.TON = 0;//stops timer 1
                              }
 
 
                         }
-                        if(PORTBbits.RB2== 1 && state==1)
+                        
+
+                        if(PORTBbits.RB2== 1 && state==1)//if the button is not pressed
                         {   state=0;
                             TMR3 = 0;
-                            while(TMR3 < PR3);
+                            while(TMR3 < PR3);//5ms delay
                         }
 
-                        if(PORTBbits.RB5==0 && T1CONbits.TON==0){
-                            TMR1=0;
-                            cnt=0;
-                            mins=0;
-                            tens=0;
-                            tenmins = 0;
-                            hundredths=0;
-                            tenths=0;
-
-                        }
-    if(PORTBbits.RB5==0 && T1CONbits.TON==0){
+                      
+                     if(PORTBbits.RB5==0 && T1CONbits.TON==0){
+        //if the watch is stopped and the reset button is pressed, everything in watch is resetted
                             TMR1=0;
                             cnt=0;
                             mins=0;
@@ -327,17 +298,17 @@ void __attribute__((interrupt,auto_psv)) _T1Interrupt(void)
 	// Updates cnt to wraparound from 9 to 0 for this demo.
         if(mins==9&&tens==5&&cnt==9)
         {
-            tenmins=(tenmins<9)?(tenmins+1):0;
+            tenmins=(tenmins<9)?(tenmins+1):0;//counts every ten minutes
         }
         if(tens==5&&cnt==9)
         {
-            mins=(mins<9)?(mins+1):0;
+            mins=(mins<9)?(mins+1):0;//counts every minute
         }
         if(cnt==9)
-        { tens=(tens<5)?(tens+1):0;
+        { tens=(tens<5)?(tens+1):0;//counts every ten seconds
         }
 
-        cnt = (cnt<9)?(cnt+1):0;
+        cnt = (cnt<9)?(cnt+1):0;//counts the seconds
 
 
 /*******************************/
