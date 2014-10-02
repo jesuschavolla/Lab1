@@ -54,26 +54,10 @@ volatile unsigned char tenmins;
 
 volatile unsigned char tenths;
 volatile unsigned int hundredths;
+volatile unsigned int state=0;
+volatile unsigned int click = 0;
 unsigned char command;
 // ******************************************************************************************* //
-
-
-
-void DebounceDelay() {
-    TMR3 = 0;
-    T3CONbits.TON = 1;//     (sets timer off)
-	    T3CONbits.TCKPS1=1;//    (sets timer prescaler to 1:256)
-            T3CONbits.TCKPS0=1;//   (set timer prescaler to 1:256)
-	    T3CONbits.TCS= 0;//     (Fosc/2)
-            PR3 = 576;
-
-
-	// TODO: Use Timer 1 to create a precise 5 ms delay.
-	//int i;
-	//for(i=0; i<PR3; i++);
-    while(TMR3 < PR3);
-}
-
 // ******************************************************************************************* //
 
 int main(void)
@@ -106,7 +90,12 @@ int main(void)
 	// input.
     CNPU1bits.CN2PUE=1;
     CNPU1bits.CN3PUE=1;
-    CNPU1bits.CN6PUE=1;
+    CNEN2bits.CN27IE = 1;
+    CNPU1bits.CN6PUE = 1;
+    CNEN1bits.CN6IE = 1;
+    IFS1bits.CNIF = 0;
+    IEC1bits.CNIE = 1;
+
 
 	// TODO: Setup Timer 1 to use internal clock (Fosc/2).
 
@@ -125,7 +114,7 @@ int main(void)
 	//
 
  	// TODO: Set Timer 1 to be initially off.
-            
+
 
 	// TODO: Clear Timer 1 value and reset interrupt flag
             TMR3=0;//Clears timer1
@@ -137,7 +126,11 @@ int main(void)
             //        = 5e-3 / (1 / 57600)
             //        = 5e-3 * 57600
             //        = 288
-            PR3 = 288;//timer 1's period for 5ms
+             T3CONbits.TON = 1;//     (sets timer off)
+              T3CONbits.TCKPS1=1;//    (sets timer prescaler to 1:256)
+              T3CONbits.TCKPS0=1;//   (set timer prescaler to 1:256)
+              T3CONbits.TCS= 0;//     (Fosc/2)
+              PR3 = 576;
 
 
 //
@@ -174,7 +167,7 @@ int main(void)
 //	LCDPrintString("Test");
 //	command = 0xC;
 /*******************************/
-  
+
 	LCDPrintString("Running:");
 	LCDMoveCursor(1,0);
 	LCDPrintString("00:00.00");
@@ -186,47 +179,12 @@ int main(void)
 //	LCDPrintChar('.');
 //	LCDPrintChar('0');
 //	LCDPrintChar('0');
-        int state=0;
-        int click = 0;
+        state=0;
+        click = 0;
 
 	while(1)
 	{
-//             
-                        
-                        if(PORTBbits.RB2 == 0&&state==0)
-                        {
-                            LCDMoveCursor(0,0);
-                                 LCDPrintString("Running:");
-                            click++;
-                             LATAbits.LATA0=~(LATAbits.LATA0);//turn off GREEn 
-                             LATAbits.LATA1=~(LATAbits.LATA1);//TURN on red
-                             DebounceDelay();//5ms delay
-                             state=1;
-                             T1CONbits.TON = 1;
-
-                             if(click%2 == 1){
-                                 LCDMoveCursor(0,0);
-                                 LCDPrintString("Stopped:");
-                                 T1CONbits.TON = 0;
-                             }
-
-
-                        }
-                        if(PORTBbits.RB2== 1 && state==1)
-                        {   state=0;
-                            DebounceDelay();
-                        }
-
-                        if(PORTBbits.RB5==0 && T1CONbits.TON==0){
-                            TMR1=0;
-                            cnt=0;
-                            mins=0;
-                            tens=0;
-                            tenmins = 0;
-                            hundredths=0;
-                            tenths=0;
-
-                        }
+//
 //                        state = 1;
 //                    break;
 //                    case 1:
@@ -256,11 +214,13 @@ int main(void)
 //                }
 //            while(PORTAbits.RA0==0)//while Green lED is on
 //            {
-           
+
             LCDMoveCursor(1,0);
             LCDPrintChar(tenmins+'0');
             LCDMoveCursor(1,1);
             LCDPrintChar(mins+'0');
+            LCDMoveCursor(1,2);
+            LCDPrintChar(':');
 
             LCDMoveCursor(1,3);
             LCDPrintChar(tens+'0');
@@ -268,53 +228,26 @@ int main(void)
             LCDMoveCursor(1,4);
             LCDPrintChar(cnt+'0');
 //            given above
+            LCDMoveCursor(1,5);
+             LCDPrintChar('.');
 
-            LCDMoveCursor(1,6);
             tenths = TMR1/5759.9;
+            LCDMoveCursor(1,6);
             LCDPrintChar((int)(tenths)+'0');
-            
-            
+
+
 
             if((TMR1/575.99)<10)
                 hundredths=(int)(TMR1/575.99);
-            
+
             if((TMR1/575.99)>=10)
             hundredths=((int)(TMR1/575.99))-(((int)(TMR1/5759.9))*10);
 
             LCDMoveCursor(1,7);
              LCDPrintChar(hundredths+'0');
-            
 
-//            while(PORTAbits.RA1==0)//while RED LED is on
-//            {
-//            IFS0bits.T1IF = 0;
-//            LCDPrintString("STOPPED:");
-//            LCDMoveCursor(1,0);
-//            LCDPrintChar(tenmins+'0');
-//            LCDMoveCursor(1,1);
-//            LCDPrintChar(mins+'0');
-//
-//            LCDMoveCursor(1,3);
-//            LCDPrintChar(tens+'0');
-//            //given
-//            LCDMoveCursor(1,4);
-//            LCDPrintChar(cnt+'0');
-////            given above
-//
-//            LCDMoveCursor(1,6);
-//            LCDPrintChar((int)(TMR1/5759)+'0');
-//
-//
-//            if((TMR1/575.99)<10)
-//                hundredths=(int)(TMR1/575.99);
-//
-//            if((TMR1/575.99)>=10)
-//            hundredths=((int)(TMR1/575.99))-(((int)(TMR1/5759.9))*10);
-//
-//            LCDMoveCursor(1,7);
-//             LCDPrintChar(hundredths+'0');
-//
-//            }
+
+
         }
 	return 0;
 }
@@ -331,9 +264,62 @@ int main(void)
 //
 // The functionality defined in an interrupt should be a minimal as possible
 // to ensure additional interrupts can be processed.
+void __attribute__((interrupt, auto_psv)) _CNInterrupt(void) {
+
+                        if(PORTBbits.RB2 == 0&&state==0)
+                        {
+                            LCDMoveCursor(0,0);
+                                 LCDPrintString("Running:");
+                            click++;
+                             LATAbits.LATA0=~(LATAbits.LATA0);//turn off GREEn
+                             LATAbits.LATA1=~(LATAbits.LATA1);//TURN on red
+                              TMR3 = 0;
+                              while(TMR3 < PR3);
+
+                             state=1;
+                             T1CONbits.TON = 1;
+
+                             if(click%2 == 1){
+                                 LCDMoveCursor(0,0);
+                                 LCDPrintString("Stopped:");
+                                 T1CONbits.TON = 0;
+                             }
+
+
+                        }
+                        if(PORTBbits.RB2== 1 && state==1)
+                        {   state=0;
+                            TMR3 = 0;
+                            while(TMR3 < PR3);
+                        }
+
+                        if(PORTBbits.RB5==0 && T1CONbits.TON==0){
+                            TMR1=0;
+                            cnt=0;
+                            mins=0;
+                            tens=0;
+                            tenmins = 0;
+                            hundredths=0;
+                            tenths=0;
+
+                        }
+    if(PORTBbits.RB5==0 && T1CONbits.TON==0){
+                            TMR1=0;
+                            cnt=0;
+                            mins=0;
+                            tens=0;
+                            tenmins = 0;
+                            hundredths=0;
+                            tenths=0;
+
+                        }
+    IFS1bits.CNIF = 0;
+
+}
 
 void __attribute__((interrupt,auto_psv)) _T1Interrupt(void)
 //void _ISR _T1Interrupt(void)
+
 {
 	// Clear Timer 1 interrupt flag to allow another Timer 1 interrupt to occur.
 	IFS0bits.T1IF = 0;
@@ -362,3 +348,4 @@ void __attribute__((interrupt,auto_psv)) _T1Interrupt(void)
 }
 
 // ******************************************************************************************* //
+
